@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Result Management · Advanced NumPy</title>
+  <!-- NumJs (NumPy-like library) -->
+  <script src="https://cdn.jsdelivr.net/npm/numjs@0.16.0/dist/numjs.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: #f0f4fa;
+      margin: 0;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1300px;
+      width: 100%;
+    }
+    /* header */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+    .title-section h1 {
+      font-size: 2.3rem;
+      font-weight: 700;
+      color: #0b2b4d;
+      margin: 0 0 0.2rem 0;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .title-section .badge {
+      background: #1e3a5f;
+      color: white;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.9rem;
+      border-radius: 30px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      vertical-align: middle;
+    }
+    .subhead {
+      color: #2c3e66;
+      margin: 0;
+      font-size: 1rem;
+      background: #e9eff9;
+      border-radius: 30px;
+      padding: 0.4rem 1.2rem;
+      display: inline-block;
+      border: 1px solid #cbd9ec;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: white;
+      border: 1px solid #cbd9ec;
+      padding: 0.7rem 1.4rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: #1e3a5f;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .btn:hover {
+      background: #e9eff9;
+      border-color: #8aa9d0;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(30, 58, 95, 0.1);
+    }
+    .btn-primary {
+      background: #1e3a5f;
+      border-color: #1e3a5f;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #14304f;
+      border-color: #14304f;
+    }
+    /* cards */
+    .card {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 8px 28px rgba(0, 20, 50, 0.06);
+      padding: 1.8rem 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid #d9e2ef;
+      transition: box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 12px 36px rgba(0, 20, 50, 0.1);
+    }
+    .card h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #1e3a5f;
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card h2 i {
+      font-style: normal;
+      font-size: 1.5rem;
+    }
+    /* table */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid #e2e8f0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      min-width: 900px;
+    }
+    th {
+      background: #1e3a5f;
+      color: white;
+      font-weight: 500;
+      text-align: center;
+      padding: 1rem 0.6rem;
+      font-size: 0.9rem;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.8rem 0.6rem;
+      text-align: center;
+      border-bottom: 1px solid #e9eff7;
+      background-color: white;
+      transition: background 0.1s;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tbody tr:hover td {
+      background: #f5f9ff;
+    }
+    .rank-badge {
+      display: inline-block;
+      background: #e9eff9;
+      color: #1e3a5f;
+      font-weight: 600;
+      padding: 0.25rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      min-width: 50px;
+    }
+    .grade-badge {
+      display: inline-block;
+      font-weight: 600;
+      padding: 0.25rem 0.9rem;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      min-width: 50px;
+    }
+    .grade-A { background: #d4edda; color: #0b5e2e; }
+    .grade-B { background: #d1ecf1; color: #0b4b5e; }
+    .grade-C { background: #fff3cd; color: #856404; }
+    .grade-D { background: #f8d7da; color: #842029; }
+    .grade-F { background: #e2e3e5; color: #41464b; }
+    /* stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-item {
+      background: #f8fafd;
+      border-radius: 20px;
+      padding: 1.2rem 1.4rem;
+      border: 1px solid #d0dfee;
+      transition: transform 0.1s;
+    }
+    .stat-item:hover {
+      transform: translateY(-2px);
+      border-color: #a0b8d6;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #4a5b7a;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0b2b4d;
+      line-height: 1.2;
+    }
+    .stat-sub {
+      font-size: 0.85rem;
+      color: #556b8a;
+      margin-top: 4px;
+    }
+    .subject-means {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      background: #f8fafd;
+      border-radius: 20px;
+      padding: 1.2rem 1.8rem;
+      border: 1px solid #d0dfee;
+      margin-top: 0.5rem;
+    }
+    .subject-mean-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .subject-mean-label {
+      font-weight: 600;
+      color: #1e3a5f;
+      font-size: 0.95rem;
+      min-width: 70px;
+    }
+    .subject-mean-bar {
+      width: 120px;
+      height: 10px;
+      background: #dbe4f0;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .subject-mean-fill {
+      height: 100%;
+      background: #3b6ea5;
+      border-radius: 20px;
+      transition: width 0.3s;
+    }
+    .subject-mean-value {
+      font-weight: 600;
+      color: #0b2b4d;
+      font-size: 1rem;
+      min-width: 45px;
+    }
+    /* array demo */
+    .array-demo {
+      background: #f0f4fa;
+      border-radius: 18px;
+      padding: 1.2rem 1.8rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: #1e3a5f;
+      margin-top: 1.5rem;
+      border-left: 6px solid #3b6ea5;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .array-demo .label {
+      font-weight: 700;
+      color: #0b2b4d;
+    }
+    .footer-note {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #6a7b99;
+      margin-top: 1rem;
+      border-top: 1px solid #d0dfee;
+      padding-top: 1.5rem;
+    }
+    /* toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e3a5f;
+      color: white;
+      padding: 0.9rem 2rem;
+      border-radius: 50px;
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      z-index: 999;
+      font-size: 0.95rem;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-10px);
+    }
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+    .sortable:hover {
+      background: #2b4a72 !important;
+    }
+    .sortable::after {
+      content: ' ↕';
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+    .sort-asc::after {
+      content: ' ↑';
+      opacity: 1;
+    }
+    .sort-desc::after {
+      content: ' ↓';
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1>
+        📊 Exam Result Management
+        <span class="badge">NumPy Advanced</span>
+      </h1>
+      <div class="subhead">grades · averages · ranking · percentile · subject analytics</div>
+    </div>
+    <div class="action-buttons">
+      <button class="btn" id="exportBtn">
+        <span>📥</span> Export CSV
+      </button>
+      <button class="btn btn-primary" id="refreshBtn">
+        <span>🔄</span> Recalculate
+      </button>
+    </div>
+  </div>
+
+  <!-- Main result table -->
+  <div class="card">
+    <h2><i>📋</i> Student results, ranking &amp; percentile</h2>
+    <div class="table-wrapper">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th class="sortable" data-key="rank">Rank</th>
+            <th class="sortable" data-key="name">Student</th>
+            <th class="sortable" data-key="math">Math</th>
+            <th class="sortable" data-key="physics">Physics</th>
+            <th class="sortable" data-key="chemistry">Chemistry</th>
+            <th class="sortable" data-key="biology">Biology</th>
+            <th class="sortable" data-key="average">Average</th>
+            <th class="sortable" data-key="percentile">Percentile</th>
+            <th class="sortable" data-key="grade">Grade</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- dynamic -->
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top: 1rem; font-size: 0.9rem; color: #556b8a; display: flex; gap: 1.5rem; flex-wrap: wrap;">
+      <span>🔹 Dense ranking (1,2,3...)</span>
+      <span>🔹 Percentile based on average (higher = better)</span>
+      <span>🔹 Click column headers to sort</span>
+    </div>
+  </div>
+
+  <!-- Statistics card -->
+  <div class="card">
+    <h2><i>📈</i> Class statistics &amp; subject analytics (NumPy)</h2>
+    <div class="stats-grid" id="statsGrid">
+      <!-- dynamic stats -->
+    </div>
+    <div class="subject-means" id="subjectMeansContainer">
+      <!-- dynamic subject bars -->
+    </div>
+    <!-- NumPy array representation -->
+    <div class="array-demo" id="arrayDemo">
+      <!-- dynamic -->
+    </div>
+  </div>
+
+  <div class="footer-note">
+    ⚡ Powered by <strong>NumJs (NumPy for JavaScript)</strong> · All calculations use NumPy-style operations
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast">Done</div>
+
+<script>
+  (function() {
+    // ---------- 1. Student data (raw) ----------
+    let students = [
+      { name: "Alice Chen",    scores: [92, 88, 95, 90] },
+      { name: "Bob Martinez",  scores: [78, 85, 70, 82] },
+      { name: "Carla Ruiz",    scores: [88, 92, 85, 91] },
+      { name: "David Kim",     scores: [65, 70, 62, 68] },
+      { name: "Eva Novak",     scores: [95, 98, 94, 97] },
+      { name: "Frank Osei",    scores: [82, 79, 88, 84] },
+      { name: "Grace Liu",     scores: [70, 75, 68, 72] },
+      { name: "Henry Ford",    scores: [55, 60, 52, 58] },
+      { name: "Ivy Chen",      scores: [98, 96, 99, 97] },
+      { name: "Jamal Adams",   scores: [84, 80, 86, 82] }
+    ];
+
+    // ---------- 2. Global state for sorting ----------
+    let currentSortKey = 'rank';
+    let currentSortDir = 'asc'; // 'asc' or 'desc'
+    let currentData = []; // will hold enriched objects for rendering
+
+    // ---------- 3. Utility: compute enriched data using NumPy ----------
+    function computeResults() {
+      // Create score matrix: shape (n, 4)
+      const scoreMatrix = nj.array(students.map(s => s.scores));
+      // Compute averages via NumPy mean (axis=1)
+      const avgArray = nj.mean(scoreMatrix, 1); // shape (n,)
+      const averages = avgArray.tolist();
+
+      // Assign grades
+      const grades = averages.map(avg => {
+        if (avg >= 90) return 'A';
+        if (avg >= 80) return 'B';
+        if (avg >= 70) return 'C';
+        if (avg >= 60) return 'D';
+        return 'F';
+      });
+
+      // Dense ranking: 1,2,2,3...
+      const sortedUnique = [...new Set(averages)].sort((a, b) => b - a);
+      const rankMap = new Map();
+      sortedUnique.forEach((val, idx) => rankMap.set(val, idx + 1));
+      const ranks = averages.map(avg => rankMap.get(avg));
+
+      // Percentile calculation: (number of students with avg <= current) / total * 100
+      // Higher percentile = better (e.g., 90th percentile means top 10%)
+      const total = averages.length;
+      const percentiles = averages.map(avg => {
+        const below = averages.filter(a => a <= avg).length;
+        return (below / total) * 100;
+      });
+
+      // Build enriched array
+      currentData = students.map((student, i) => ({
+        name: student.name,
+        scores: student.scores,
+        math: student.scores[0],
+        physics: student.scores[1],
+        chemistry: student.scores[2],
+        biology: student.scores[3],
+        average: averages[i],
+        grade: grades[i],
+        rank: ranks[i],
+        percentile: percentiles[i]
+      }));
+
+      // Compute class statistics
+      const classAvg = nj.mean(avgArray).tolist();
+      const classStd = nj.std(avgArray).tolist();
+      const maxAvg = nj.max(avgArray).tolist();
+      const minAvg = nj.min(avgArray).tolist();
+      const medianAvg = nj.median(avgArray).tolist();
+
+      // Subject means
+      const mathMean = nj.mean(scoreMatrix.slice(null, 0)).tolist();
+      const physicsMean = nj.mean(scoreMatrix.slice(null, 1)).tolist();
+      const chemMean = nj.mean(scoreMatrix.slice(null, 2)).tolist();
+      const bioMean = nj.mean(scoreMatrix.slice(null, 3)).tolist();
+
+      // Top student (first occurrence of max average)
+      const topIdx = averages.indexOf(maxAvg);
+      const topStudent = students[topIdx]?.name || '—';
+
+      // Lowest student
+      const lowIdx = averages.indexOf(minAvg);
+      const lowStudent = students[lowIdx]?.name || '—';
+
+      return {
+        enriched: currentData,
+        classStats: { classAvg, classStd, maxAvg, minAvg, medianAvg, topStudent, lowStudent },
+        subjectMeans: { math: mathMean, physics: physicsMean, chemistry: chemMean, biology: bioMean },
+        avgArray,
+        scoreMatrix
+      };
+    }
+
+    // ---------- 4. Render table with sorting ----------
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      // Sort data based on current sort
+      const sorted = [...currentData].sort((a, b) => {
+        let valA, valB;
+        switch (currentSortKey) {
+          case 'rank': valA = a.rank; valB = b.rank; break;
+          case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
+          case 'math': valA = a.math; valB = b.math; break;
+          case 'physics': valA = a.physics; valB = b.physics; break;
+          case 'chemistry': valA = a.chemistry; valB = b.chemistry; break;
+          case 'biology': valA = a.biology; valB = b.biology; break;
+          case 'average': valA = a.average; valB = b.average; break;
+          case 'percentile': valA = a.percentile; valB = b.percentile; break;
+          case 'grade': valA = a.grade; valB = b.grade; break;
+          default: valA = a.rank; valB = b.rank;
+        }
+        if (typeof valA === 'string') {
+          return currentSortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        } else {
+          return currentSortDir === 'asc' ? valA - valB : valB - valA;
+        }
+      });
+
+      sorted.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><span class="rank-badge">#${item.rank}</span></td>
+          <td style="font-weight:500; text-align:left; padding-left:1.2rem;">${item.name}</td>
+          <td>${item.math}</td>
+          <td>${item.physics}</td>
+          <td>${item.chemistry}</td>
+          <td>${item.biology}</td>
+          <td style="font-weight:600;">${item.average.toFixed(1)}</td>
+          <td>${item.percentile.toFixed(1)}%</td>
+          <td><span class="grade-badge grade-${item.grade}">${item.grade}</span></td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      // Update sort indicators
+      document.querySelectorAll('.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.dataset.key === currentSortKey) {
+          th.classList.add(currentSortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+      });
+    }
+
+    // ---------- 5. Render stats and array demo ----------
+    function renderStats(result) {
+      const { classStats, subjectMeans, avgArray, scoreMatrix } = result;
+
+      // Stats grid
+      const statsGrid = document.getElementById('statsGrid');
+      statsGrid.innerHTML = `
+        <div class="stat-item">
+          <div class="stat-label">Class average</div>
+          <div class="stat-value">${classStats.classAvg.toFixed(2)}</div>
+          <div class="stat-sub">std dev: ${classStats.classStd.toFixed(2)}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Median average</div>
+          <div class="stat-value">${classStats.medianAvg.toFixed(1)}</div>
+          <div class="stat-sub">middle value</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Highest average</div>
+          <div class="stat-value">${classStats.maxAvg.toFixed(1)}</div>
+          <div class="stat-sub">${classStats.topStudent}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Lowest average</div>
+          <div class="stat-value">${classStats.minAvg.toFixed(1)}</div>
+          <div class="stat-sub">${classStats.lowStudent}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Top rank</div>
+          <div class="stat-value">#1</div>
+          <div class="stat-sub">${classStats.topStudent}</div>
+        </div>
+      `;
+
+      // Subject means bars
+      const subjectContainer = document.getElementById('subjectMeansContainer');
+      const subjects = [
+        { key: 'math', label: 'Math', value: subjectMeans.math },
+        { key: 'physics', label: 'Physics', value: subjectMeans.physics },
+        { key: 'chemistry', label: 'Chemistry', value: subjectMeans.chemistry },
+        { key: 'biology', label: 'Biology', value: subjectMeans.biology }
+      ];
+      // Find max for bar scaling (use 100 for simplicity)
+      const maxScale = 100;
+      subjectContainer.innerHTML = subjects.map(s => `
+        <div class="subject-mean-item">
+          <span class="subject-mean-label">${s.label}</span>
+          <div class="subject-mean-bar">
+            <div class="subject-mean-fill" style="width: ${(s.value / maxScale) * 100}%;"></div>
+          </div>
+          <span class="subject-mean-value">${s.value.toFixed(1)}</span>
+        </div>
+      `).join('');
+
+      // Array demo
+      const arrayDemo = document.getElementById('arrayDemo');
+      const avgList = avgArray.tolist().map(v => v.toFixed(2));
+      const scoreStr = scoreMatrix.toString().replace(/\n/g, ' ').substring(0, 100) + ' ...';
+      arrayDemo.innerHTML = `
+        <div><span class="label">📐 NumPy score matrix (10x4):</span> ${scoreStr}</div>
+        <div><span class="label">📊 NumPy averages (10,):</span> [${avgList.join(', ')}]</div>
+        <div><span class="label">📈 Class mean (NumPy):</span> ${classStats.classAvg.toFixed(4)}</div>
+        <div><span class="label">📉 Class std (NumPy):</span> ${classStats.classStd.toFixed(4)}</div>
+        <div><span class="label">🏆 Dense ranks:</span> [${result.enriched.map(e => e.rank).join(', ')}]</div>
+        <div><span class="label">📊 Percentiles:</span> [${result.enriched.map(e => e.percentile.toFixed(1)).join(', ')}]</div>
+      `;
+    }
+
+    // ---------- 6. Full refresh ----------
+    function refreshAll() {
+      const result = computeResults();
+      // Ensure currentData is up-to-date
+      currentData = result.enriched;
+      renderTable();
+      renderStats(result);
+    }
+
+    // ---------- 7. Toast helper ----------
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // ---------- 8. Export CSV ----------
+    function exportCSV() {
+      const rows = [
+        ['Rank', 'Student', 'Math', 'Physics', 'Chemistry', 'Biology', 'Average', 'Percentile', 'Grade']
+      ];
+      currentData.forEach(item => {
+        rows.push([
+          item.rank,
+          item.name,
+          item.math,
+          item.physics,
+          item.chemistry,
+          item.biology,
+          item.average.toFixed(2),
+          item.percentile.toFixed(2),
+          item.grade
+        ]);
+      });
+      const csv = rows.map(r => r.join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'exam_results.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('📥 Exported as CSV');
+    }
+
+    // ---------- 9. Event listeners ----------
+    function setupListeners() {
+      // Sorting
+      document.querySelectorAll('.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.key;
+          if (currentSortKey === key) {
+            // Toggle direction
+            currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+          } else {
+            currentSortKey = key;
+            currentSortDir = 'asc';
+          }
+          renderTable();
+        });
+      });
+
+      // Refresh button (recalculates and re-renders)
+      document.getElementById('refreshBtn').addEventListener('click', () => {
+        refreshAll();
+        showToast('🔄 Results recalculated');
+      });
+
+      // Export
+      document.getElementById('exportBtn').addEventListener('click', exportCSV);
+    }
+
+    // ---------- 10. Initialize ----------
+    window.addEventListener('load', () => {
+      // Check if NumJs loaded
+      if (typeof nj === 'undefined') {
+        alert('NumJs library failed to load. Please check your internet connection.');
+        return;
+      }
+      refreshAll();
+      setupListeners();
+    });
+  })();
+</script>
+</body>
+</html>
