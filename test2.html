@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Result Management · Interactive Gradebook</title>
+  <script src="https://cdn.jsdelivr.net/npm/numjs@0.16.0/dist/numjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif; }
+    body {
+      background: linear-gradient(135deg, #eef3fb 0%, #e2ebf7 100%);
+      margin: 0;
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 1350px; width: 100%; }
+
+    /* header */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+    }
+    .title-section h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #0b2b4d;
+      margin: 0 0 0.3rem 0;
+      letter-spacing: -0.6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .title-section .badge {
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 30px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+    }
+    .subhead {
+      color: #2c3e66;
+      margin: 0;
+      font-size: 0.95rem;
+      background: #e9eff9;
+      border-radius: 30px;
+      padding: 0.4rem 1.2rem;
+      display: inline-block;
+      border: 1px solid #cbd9ec;
+    }
+    .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      background: white;
+      border: 1px solid #cbd9ec;
+      padding: 0.65rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #1e3a5f;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .btn:hover {
+      background: #e9eff9;
+      border-color: #8aa9d0;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(30, 58, 95, 0.1);
+    }
+    .btn-primary {
+      background: #1e3a5f;
+      border-color: #1e3a5f;
+      color: white;
+    }
+    .btn-primary:hover { background: #14304f; border-color: #14304f; }
+    .btn-danger {
+      background: #fff5f5;
+      border-color: #f5c2c2;
+      color: #a12b2b;
+    }
+    .btn-danger:hover { background: #ffe5e5; border-color: #e89b9b; }
+    .btn-success {
+      background: #f0fff5;
+      border-color: #b8e6c8;
+      color: #1a6b3c;
+    }
+    .btn-success:hover { background: #e0f7e8; }
+
+    /* cards */
+    .card {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 8px 28px rgba(0, 20, 50, 0.06);
+      padding: 1.8rem 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid #d9e2ef;
+    }
+    .card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e3a5f;
+      margin-top: 0;
+      margin-bottom: 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .card h2 i { font-style: normal; font-size: 1.4rem; }
+    .card h2 .hint {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: #6a7b99;
+      background: #f0f4fa;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      margin-left: auto;
+    }
+
+    /* table */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid #e2e8f0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 950px;
+    }
+    th {
+      background: #1e3a5f;
+      color: white;
+      font-weight: 500;
+      text-align: center;
+      padding: 0.9rem 0.5rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+    td {
+      padding: 0.7rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid #e9eff7;
+      background-color: white;
+      transition: background 0.15s;
+    }
+    tbody tr:hover td { background: #f5f9ff; }
+    tbody tr.editing td { background: #fffbf0; }
+    tr:last-child td { border-bottom: none; }
+
+    .rank-badge {
+      display: inline-block;
+      background: #e9eff9;
+      color: #1e3a5f;
+      font-weight: 700;
+      padding: 0.25rem 0.7rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      min-width: 44px;
+    }
+    .rank-badge.top1 { background: #ffd966; color: #6b4d00; }
+    .rank-badge.top2 { background: #e0e6ed; color: #3a4a5e; }
+    .rank-badge.top3 { background: #f5cba7; color: #7a4210; }
+
+    .grade-badge {
+      display: inline-block;
+      font-weight: 700;
+      padding: 0.25rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      min-width: 44px;
+    }
+    .grade-A { background: #d4edda; color: #0b5e2e; }
+    .grade-B { background: #d1ecf1; color: #0b4b5e; }
+    .grade-C { background: #fff3cd; color: #856404; }
+    .grade-D { background: #f8d7da; color: #842029; }
+    .grade-F { background: #e2e3e5; color: #41464b; }
+
+    .score-input {
+      width: 55px;
+      padding: 0.4rem 0.3rem;
+      border: 1px solid #d0dfee;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #1e3a5f;
+      background: #fbfdff;
+      transition: border 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+    .score-input:focus {
+      outline: none;
+      border-color: #3b6ea5;
+      box-shadow: 0 0 0 3px rgba(59, 110, 165, 0.15);
+      background: white;
+    }
+    .score-input.invalid {
+      border-color: #e53e3e;
+      background: #fff5f5;
+    }
+    .name-input {
+      width: 140px;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #d0dfee;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #1e3a5f;
+      background: #fbfdff;
+      text-align: left;
+      font-family: inherit;
+    }
+    .name-input:focus {
+      outline: none;
+      border-color: #3b6ea5;
+      box-shadow: 0 0 0 3px rgba(59, 110, 165, 0.15);
+      background: white;
+    }
+    .row-actions { display: flex; gap: 4px; justify-content: center; }
+    .icon-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0.3rem 0.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: background 0.15s;
+      line-height: 1;
+    }
+    .icon-btn:hover { background: #eef3fb; }
+    .icon-btn.delete:hover { background: #ffe5e5; }
+
+    /* stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-item {
+      background: linear-gradient(135deg, #f8fafd, #f1f6fc);
+      border-radius: 18px;
+      padding: 1.1rem 1.3rem;
+      border: 1px solid #d0dfee;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stat-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(30, 58, 95, 0.08);
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #4a5b7a;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: #0b2b4d;
+      line-height: 1.2;
+    }
+    .stat-sub { font-size: 0.8rem; color: #556b8a; margin-top: 4px; }
+
+    .subject-means {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      background: #f8fafd;
+      border-radius: 20px;
+      padding: 1.3rem 1.6rem;
+      border: 1px solid #d0dfee;
+      margin-top: 0.5rem;
+    }
+    .subject-mean-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .subject-mean-label {
+      font-weight: 600;
+      color: #1e3a5f;
+      font-size: 0.9rem;
+      min-width: 75px;
+    }
+    .subject-mean-bar {
+      flex: 1;
+      height: 10px;
+      background: #dbe4f0;
+      border-radius: 20px;
+      overflow: hidden;
+      min-width: 60px;
+    }
+    .subject-mean-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #3b6ea5, #5a8cc4);
+      border-radius: 20px;
+      transition: width 0.4s ease;
+    }
+    .subject-mean-value {
+      font-weight: 700;
+      color: #0b2b4d;
+      font-size: 0.95rem;
+      min-width: 45px;
+      text-align: right;
+    }
+
+    /* distribution chart */
+    .distribution {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 140px;
+      padding: 0 10px;
+      margin-top: 1rem;
+    }
+    .dist-bar-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .dist-bar {
+      width: 100%;
+      max-width: 70px;
+      border-radius: 10px 10px 4px 4px;
+      transition: height 0.4s ease;
+      position: relative;
+      min-height: 4px;
+    }
+    .dist-bar.grade-A { background: linear-gradient(180deg, #4caf7d, #2e7d54); }
+    .dist-bar.grade-B { background: linear-gradient(180deg, #4ba3c7, #2e7a9b); }
+    .dist-bar.grade-C { background: linear-gradient(180deg, #e0b84c, #b08a1a); }
+    .dist-bar.grade-D { background: linear-gradient(180deg, #e88c8c, #b85a5a); }
+    .dist-bar.grade-F { background: linear-gradient(180deg, #a0a8b3, #6b7280); }
+    .dist-count {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1e3a5f;
+      margin-top: 6px;
+    }
+    .dist-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #4a5b7a;
+      margin-top: 4px;
+    }
+
+    /* array demo */
+    .array-demo {
+      background: #0f1e33;
+      border-radius: 18px;
+      padding: 1.2rem 1.6rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: #a8c4e0;
+      margin-top: 1.5rem;
+      border-left: 6px solid #3b6ea5;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .array-demo .label { color: #5a8cc4; font-weight: 700; }
+    .array-demo .value { color: #e8f0fb; }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #6a7b99;
+      margin-top: 1rem;
+      border-top: 1px solid #d0dfee;
+      padding-top: 1.5rem;
+    }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e3a5f;
+      color: white;
+      padding: 0.85rem 1.8rem;
+      border-radius: 50px;
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      z-index: 999;
+      font-size: 0.9rem;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #6a7b99;
+      font-style: italic;
+    }
+
+    /* modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 30, 51, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal {
+      background: white;
+      border-radius: 24px;
+      padding: 1.8rem 2rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+      transform: translateY(20px);
+      transition: transform 0.2s;
+    }
+    .modal-backdrop.show .modal { transform: translateY(0); }
+    .modal h3 {
+      margin-top: 0;
+      color: #1e3a5f;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal p { color: #4a5b7a; font-size: 0.95rem; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+    }
+    .add-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 1rem;
+    }
+    .add-form label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #4a5b7a;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .add-form input {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #d0dfee;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: #1e3a5f;
+    }
+    .add-form input:focus {
+      outline: none;
+      border-color: #3b6ea5;
+      box-shadow: 0 0 0 3px rgba(59, 110, 165, 0.15);
+    }
+    .add-form .full-width { grid-column: 1 / -1; }
+
+    @media (max-width: 600px) {
+      .add-form { grid-template-columns: 1fr; }
+      .title-section h1 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1>
+        📊 Exam Result Management
+        <span class="badge">INTERACTIVE</span>
+      </h1>
+      <div class="subhead">editable scores · live NumPy recalculation · grade distribution</div>
+    </div>
+    <div class="action-buttons">
+      <button class="btn btn-success" id="addStudentBtn">
+        <span>➕</span> Add Student
+      </button>
+      <button class="btn" id="exportBtn">
+        <span>📥</span> Export CSV
+      </button>
+      <button class="btn btn-primary" id="resetBtn">
+        <span>↺</span> Reset Data
+      </button>
+    </div>
+  </div>
+
+  <!-- Main result table -->
+  <div class="card">
+    <h2>
+      <i>📋</i> Live gradebook
+      <span class="hint">Edit any score or name — statistics update instantly</span>
+    </h2>
+    <div class="table-wrapper">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th style="text-align:left; padding-left:1rem;">Student</th>
+            <th>Math</th>
+            <th>Physics</th>
+            <th>Chemistry</th>
+            <th>Biology</th>
+            <th>Average</th>
+            <th>Percentile</th>
+            <th>Grade</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- dynamic -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Stats card -->
+  <div class="card">
+    <h2><i>📈</i> Class statistics (live NumPy)</h2>
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <h2 style="margin-top:1.5rem; font-size:1.05rem;"><i>📚</i> Subject means</h2>
+    <div class="subject-means" id="subjectMeansContainer"></div>
+
+    <h2 style="margin-top:1.5rem; font-size:1.05rem;"><i>📊</i> Grade distribution</h2>
+    <div class="distribution" id="distributionChart"></div>
+
+    <div class="array-demo" id="arrayDemo"></div>
+  </div>
+
+  <div class="footer-note">
+    ⚡ Built with <strong>NumJs</strong> · Every edit triggers a fresh NumPy recalculation
+  </div>
+</div>
+
+<!-- Add student modal -->
+<div class="modal-backdrop" id="addModal">
+  <div class="modal">
+    <h3><span>➕</span> Add New Student</h3>
+    <p>Enter the student name and their four subject scores (0–100).</p>
+    <div class="add-form">
+      <div class="full-width">
+        <label for="newName">Full Name</label>
+        <input type="text" id="newName" placeholder="e.g. Jane Doe" maxlength="40">
+      </div>
+      <div>
+        <label for="newMath">Math</label>
+        <input type="number" id="newMath" min="0" max="100" value="75">
+      </div>
+      <div>
+        <label for="newPhysics">Physics</label>
+        <input type="number" id="newPhysics" min="0" max="100" value="75">
+      </div>
+      <div>
+        <label for="newChemistry">Chemistry</label>
+        <input type="number" id="newChemistry" min="0" max="100" value="75">
+      </div>
+      <div>
+        <label for="newBiology">Biology</label>
+        <input type="number" id="newBiology" min="0" max="100" value="75">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelAddBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmAddBtn">Add Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal-backdrop" id="deleteModal">
+  <div class="modal">
+    <h3><span>🗑️</span> Remove Student</h3>
+    <p id="deleteMessage">Are you sure you want to remove this student?</p>
+    <div class="modal-actions">
+      <button class="btn" id="cancelDeleteBtn">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">Remove</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Done</div>
+
+<script>
+  (function() {
+    // ========== 1. INITIAL DATA ==========
+    const INITIAL_STUDENTS = [
+      { id: 's1', name: "Alice Chen",    scores: [92, 88, 95, 90] },
+      { id: 's2', name: "Bob Martinez",  scores: [78, 85, 70, 82] },
+      { id: 's3', name: "Carla Ruiz",    scores: [88, 92, 85, 91] },
+      { id: 's4', name: "David Kim",     scores: [65, 70, 62, 68] },
+      { id: 's5', name: "Eva Novak",     scores: [95, 98, 94, 97] },
+      { id: 's6', name: "Frank Osei",    scores: [82, 79, 88, 84] },
+      { id: 's7', name: "Grace Liu",     scores: [70, 75, 68, 72] },
+      { id: 's8', name: "Henry Ford",    scores: [55, 60, 52, 58] },
+      { id: 's9', name: "Ivy Chen",      scores: [98, 96, 99, 97] },
+      { id: 's10', name: "Jamal Adams",  scores: [84, 80, 86, 82] }
+    ];
+
+    // ========== 2. STATE ==========
+    let students = JSON.parse(JSON.stringify(INITIAL_STUDENTS)); // deep copy
+    let nextId = 100;
+    let pendingDeleteId = null;
+    let pendingDeleteName = '';
+
+    // ========== 3. HELPERS ==========
+    function clampScore(v) {
+      const n = Number(v);
+      if (isNaN(n)) return 0;
+      return Math.min(100, Math.max(0, n));
+    }
+
+    function getGrade(avg) {
+      if (avg >= 90) return 'A';
+      if (avg >= 80) return 'B';
+      if (avg >= 70) return 'C';
+      if (avg >= 60) return 'D';
+      return 'F';
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    // ========== 4. CORE NumPy ENGINE ==========
+    // Every time data changes, we rebuild NumPy arrays from scratch.
+    function computeNumPyResults() {
+      if (students.length === 0) {
+        return {
+          enriched: [],
+          classStats: null,
+          subjectMeans: null,
+          avgArray: null,
+          scoreMatrix: null,
+          gradeCounts: { A: 0, B: 0, C: 0, D: 0, F: 0 }
+        };
+      }
+
+      // Build 2D score matrix with NumJs
+      const rawScores = students.map(s => s.scores);
+      const scoreMatrix = nj.array(rawScores); // shape (n, 4)
+
+      // Per-student average using NumPy mean along axis 1
+      const avgArray = nj.mean(scoreMatrix, 1);
+      const averages = avgArray.tolist();
+
+      // Grades
+      const grades = averages.map(getGrade);
+
+      // Dense ranking
+      const sortedUnique = [...new Set(averages)].sort((a, b) => b - a);
+      const rankMap = new Map();
+      sortedUnique.forEach((v, i) => rankMap.set(v, i + 1));
+      const ranks = averages.map(a => rankMap.get(a));
+
+      // Percentile (higher = better)
+      const total = averages.length;
+      const percentiles = averages.map(avg => {
+        const countBelow = averages.filter(a => a <= avg).length;
+        return (countBelow / total) * 100;
+      });
+
+      // Enrich
+      const enriched = students.map((s, i) => ({
+        id: s.id,
+        name: s.name,
+        scores: s.scores,
+        math: s.scores[0],
+        physics: s.scores[1],
+        chemistry: s.scores[2],
+        biology: s.scores[3],
+        average: averages[i],
+        grade: grades[i],
+        rank: ranks[i],
+        percentile: percentiles[i]
+      }));
+
+      // Class stats
+      const classAvg = nj.mean(avgArray).tolist();
+      const classStd = nj.std(avgArray).tolist();
+      const maxAvg = nj.max(avgArray).tolist();
+      const minAvg = nj.min(avgArray).tolist();
+      const medianAvg = nj.median(avgArray).tolist();
+      const topIdx = averages.indexOf(maxAvg);
+      const lowIdx = averages.indexOf(minAvg);
+
+      // Subject means
+      const subjectMeans = {
+        math: nj.mean(scoreMatrix.slice(null, 0)).tolist(),
+        physics: nj.mean(scoreMatrix.slice(null, 1)).tolist(),
+        chemistry: nj.mean(scoreMatrix.slice(null, 2)).tolist(),
+        biology: nj.mean(scoreMatrix.slice(null, 3)).tolist()
+      };
+
+      // Grade counts
+      const gradeCounts = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+      grades.forEach(g => { gradeCounts[g] = (gradeCounts[g] || 0) + 1; });
+
+      return {
+        enriched,
+        classStats: {
+          classAvg, classStd, maxAvg, minAvg, medianAvg,
+          topStudent: students[topIdx]?.name || '—',
+          lowStudent: students[lowIdx]?.name || '—'
+        },
+        subjectMeans,
+        avgArray,
+        scoreMatrix,
+        gradeCounts
+      };
+    }
+
+    // ========== 5. RENDER TABLE ==========
+    // Note: The table is sorted by rank for display. Editing a score triggers a full re-render.
+    function renderTable(result) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      if (result.enriched.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No students yet. Click "Add Student" to begin.</td></tr>`;
+        return;
+      }
+
+      // Sort by rank for the displayed table
+      const sorted = [...result.enriched].sort((a, b) => a.rank - b.rank);
+
+      sorted.forEach(item => {
+        const row = document.createElement('tr');
+        row.dataset.id = item.id;
+
+        // Rank badge styling for top 3
+        let rankClass = '';
+        if (item.rank === 1) rankClass = 'top1';
+        else if (item.rank === 2) rankClass = 'top2';
+        else if (item.rank === 3) rankClass = 'top3';
+
+        row.innerHTML = `
+          <td><span class="rank-badge ${rankClass}">#${item.rank}</span></td>
+          <td style="text-align:left; padding-left:0.8rem;">
+            <input type="text" class="name-input" data-id="${item.id}" value="${escapeHtml(item.name)}" maxlength="40">
+          </td>
+          <td><input type="number" class="score-input" data-id="${item.id}" data-subject="0" min="0" max="100" value="${item.math}"></td>
+          <td><input type="number" class="score-input" data-id="${item.id}" data-subject="1" min="0" max="100" value="${item.physics}"></td>
+          <td><input type="number" class="score-input" data-id="${item.id}" data-subject="2" min="0" max="100" value="${item.chemistry}"></td>
+          <td><input type="number" class="score-input" data-id="${item.id}" data-subject="3" min="0" max="100" value="${item.biology}"></td>
+          <td style="font-weight:700; color:#0b2b4d;">${item.average.toFixed(1)}</td>
+          <td style="color:#4a5b7a;">${item.percentile.toFixed(1)}%</td>
+          <td><span class="grade-badge grade-${item.grade}">${item.grade}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="icon-btn delete" data-id="${item.id}" title="Remove student">🗑️</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    // ========== 6. RENDER STATS ==========
+    function renderStats(result) {
+      const statsGrid = document.getElementById('statsGrid');
+      const subjectContainer = document.getElementById('subjectMeansContainer');
+      const distContainer = document.getElementById('distributionChart');
+      const arrayDemo = document.getElementById('arrayDemo');
+
+      // Handle empty state
+      if (!result.classStats) {
+        statsGrid.innerHTML = `<div class="stat-item" style="grid-column:1/-1;text-align:center;padding:2rem;color:#6a7b99;">Add students to see statistics.</div>`;
+        subjectContainer.innerHTML = '';
+        distContainer.innerHTML = '';
+        arrayDemo.innerHTML = `<span class="label">// No data</span>`;
+        return;
+      }
+
+      const s = result.classStats;
+      statsGrid.innerHTML = `
+        <div class="stat-item">
+          <div class="stat-label">Class average</div>
+          <div class="stat-value">${s.classAvg.toFixed(2)}</div>
+          <div class="stat-sub">std dev: ${s.classStd.toFixed(2)}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Median</div>
+          <div class="stat-value">${s.medianAvg.toFixed(1)}</div>
+          <div class="stat-sub">middle value</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Highest</div>
+          <div class="stat-value">${s.maxAvg.toFixed(1)}</div>
+          <div class="stat-sub">${escapeHtml(s.topStudent)}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Lowest</div>
+          <div class="stat-value">${s.minAvg.toFixed(1)}</div>
+          <div class="stat-sub">${escapeHtml(s.lowStudent)}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Students</div>
+          <div class="stat-value">${result.enriched.length}</div>
+          <div class="stat-sub">in gradebook</div>
+        </div>
+      `;
+
+      // Subject means
+      const subjects = [
+        { label: 'Math', value: result.subjectMeans.math },
+        { label: 'Physics', value: result.subjectMeans.physics },
+        { label: 'Chemistry', value: result.subjectMeans.chemistry },
+        { label: 'Biology', value: result.subjectMeans.biology }
+      ];
+      subjectContainer.innerHTML = subjects.map(s => `
+        <div class="subject-mean-item">
+          <span class="subject-mean-label">${s.label}</span>
+          <div class="subject-mean-bar">
