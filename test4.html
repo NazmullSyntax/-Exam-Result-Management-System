@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Result Management · Multi-Class System</title>
+  <script src="https://cdn.jsdelivr.net/npm/numjs@0.16.0/dist/numjs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif; }
+    body {
+      background: linear-gradient(135deg, #eef3fb 0%, #e2ebf7 100%);
+      margin: 0;
+      padding: 2rem 1.5rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container { max-width: 1400px; width: 100%; }
+
+    /* header */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .title-section h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #0b2b4d;
+      margin: 0 0 0.3rem 0;
+      letter-spacing: -0.6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .title-section .badge {
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 30px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+    }
+    .subhead {
+      color: #2c3e66;
+      margin: 0;
+      font-size: 0.95rem;
+      background: #e9eff9;
+      border-radius: 30px;
+      padding: 0.4rem 1.2rem;
+      display: inline-block;
+      border: 1px solid #cbd9ec;
+    }
+    .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      background: white;
+      border: 1px solid #cbd9ec;
+      padding: 0.65rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #1e3a5f;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .btn:hover {
+      background: #e9eff9;
+      border-color: #8aa9d0;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(30, 58, 95, 0.1);
+    }
+    .btn-primary { background: #1e3a5f; border-color: #1e3a5f; color: white; }
+    .btn-primary:hover { background: #14304f; border-color: #14304f; }
+    .btn-danger { background: #fff5f5; border-color: #f5c2c2; color: #a12b2b; }
+    .btn-danger:hover { background: #ffe5e5; border-color: #e89b9b; }
+    .btn-success { background: #f0fff5; border-color: #b8e6c8; color: #1a6b3c; }
+    .btn-success:hover { background: #e0f7e8; }
+    .btn-small { padding: 0.45rem 0.9rem; font-size: 0.85rem; }
+
+    /* class tabs */
+    .class-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      background: white;
+      padding: 0.6rem;
+      border-radius: 50px;
+      border: 1px solid #d9e2ef;
+      box-shadow: 0 4px 12px rgba(0,20,50,0.04);
+      align-items: center;
+    }
+    .class-tab {
+      padding: 0.6rem 1.4rem;
+      border-radius: 40px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #4a5b7a;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+      position: relative;
+    }
+    .class-tab:hover { background: #f0f4fa; color: #1e3a5f; }
+    .class-tab.active {
+      background: linear-gradient(135deg, #1e3a5f, #2c5282);
+      color: white;
+      box-shadow: 0 4px 12px rgba(30, 58, 95, 0.25);
+    }
+    .class-tab .count {
+      background: rgba(255,255,255,0.25);
+      font-size: 0.7rem;
+      padding: 0.1rem 0.5rem;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+    .class-tab.active .count { background: rgba(255,255,255,0.3); }
+    .class-tab .close-tab {
+      margin-left: 4px;
+      opacity: 0.5;
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .class-tab .close-tab:hover { opacity: 1; }
+    .add-class-btn {
+      background: #f0fff5;
+      border: 1px dashed #8bc9a3;
+      color: #1a6b3c;
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .add-class-btn:hover { background: #e0f7e8; border-color: #5aaf79; }
+
+    /* cards */
+    .card {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 8px 28px rgba(0, 20, 50, 0.06);
+      padding: 1.8rem 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid #d9e2ef;
+    }
+    .card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1e3a5f;
+      margin-top: 0;
+      margin-bottom: 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .card h2 i { font-style: normal; font-size: 1.4rem; }
+    .card h2 .hint {
+      font-size: 0.8rem;
+      font-weight: 400;
+      color: #6a7b99;
+      background: #f0f4fa;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      margin-left: auto;
+    }
+
+    /* table */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid #e2e8f0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 1000px;
+    }
+    th {
+      background: #1e3a5f;
+      color: white;
+      font-weight: 500;
+      text-align: center;
+      padding: 0.9rem 0.5rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { background: #2b4a72; }
+    th.sortable::after { content: ' ↕'; font-size: 0.75rem; opacity: 0.5; }
+    th.sort-asc::after { content: ' ↑'; opacity: 1; }
+    th.sort-desc::after { content: ' ↓'; opacity: 1; }
+
+    td {
+      padding: 0.7rem 0.5rem;
+      text-align: center;
+      border-bottom: 1px solid #e9eff7;
+      background-color: white;
+      transition: background 0.15s;
+    }
+    tbody tr:hover td { background: #f5f9ff; }
+    tr:last-child td { border-bottom: none; }
+
+    .rank-badge {
+      display: inline-block;
+      background: #e9eff9;
+      color: #1e3a5f;
+      font-weight: 700;
+      padding: 0.25rem 0.7rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      min-width: 44px;
+    }
+    .rank-badge.top1 { background: #ffd966; color: #6b4d00; }
+    .rank-badge.top2 { background: #e0e6ed; color: #3a4a5e; }
+    .rank-badge.top3 { background: #f5cba7; color: #7a4210; }
+
+    .grade-badge {
+      display: inline-block;
+      font-weight: 700;
+      padding: 0.25rem 0.8rem;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      min-width: 44px;
+    }
+    .grade-A { background: #d4edda; color: #0b5e2e; }
+    .grade-B { background: #d1ecf1; color: #0b4b5e; }
+    .grade-C { background: #fff3cd; color: #856404; }
+    .grade-D { background: #f8d7da; color: #842029; }
+    .grade-F { background: #e2e3e5; color: #41464b; }
+
+    .score-input {
+      width: 55px;
+      padding: 0.4rem 0.3rem;
+      border: 1px solid #d0dfee;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #1e3a5f;
+      background: #fbfdff;
+      transition: border 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+    .score-input:focus {
+      outline: none;
+      border-color: #3b6ea5;
+      box-shadow: 0 0 0 3px rgba(59, 110, 165, 0.15);
+      background: white;
+    }
+    .score-input.invalid { border-color: #e53e3e; background: #fff5f5; }
+    .name-input {
+      width: 130px;
+      padding: 0.4rem 0.6rem;
+      border: 1px solid #d0dfee;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #1e3a5f;
+      background: #fbfdff;
+      text-align: left;
+      font-family: inherit;
+    }
+    .name-input:focus {
+      outline: none;
+      border-color: #3b6ea5;
+      box-shadow: 0 0 0 3px rgba(59, 110, 165, 0.15);
+      background: white;
+    }
+    .row-actions { display: flex; gap: 4px; justify-content: center; }
+    .icon-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0.3rem 0.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: background 0.15s;
+      line-height: 1;
+    }
+    .icon-btn:hover { background: #eef3fb; }
+    .icon-btn.delete:hover { background: #ffe5e5; }
+
+    /* stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .stat-item {
+      background: linear-gradient(135deg, #f8fafd, #f1f6fc);
+      border-radius: 18px;
+      padding: 1.1rem 1.3rem;
+      border: 1px solid #d0dfee;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stat-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(30, 58, 95, 0.08);
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #4a5b7a;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .stat-value { font-size: 1.7rem; font-weight: 700; color: #0b2b4d; line-height: 1.2; }
+    .stat-sub { font-size: 0.8rem; color: #556b8a; margin-top: 4px; }
+
+    .subject-means {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      background: #f8fafd;
+      border-radius: 20px;
+      padding: 1.3rem 1.6rem;
+      border: 1px solid #d0dfee;
+    }
+    .subject-mean-item { display: flex; align-items: center; gap: 12px; }
+    .subject-mean-label { font-weight: 600; color: #1e3a5f; font-size: 0.9rem; min-width: 75px; }
+    .subject-mean-bar { flex: 1; height: 10px; background: #dbe4f0; border-radius: 20px; overflow: hidden; min-width: 60px; }
+    .subject-mean-fill { height: 100%; background: linear-gradient(90deg, #3b6ea5, #5a8cc4); border-radius: 20px; transition: width 0.4s ease; }
+    .subject-mean-value { font-weight: 700; color: #0b2b4d; font-size: 0.95rem; min-width: 45px; text-align: right; }
+
+    .distribution { display: flex; align-items: flex-end; gap: 12px; height: 140px; padding: 0 10px; }
+    .dist-bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+    .dist-bar { width: 100%; max-width: 70px; border-radius: 10px 10px 4px 4px; transition: height 0.4s ease; min-height: 4px; }
+    .dist-bar.grade-A { background: linear-gradient(180deg, #4caf7d, #2e7d54); }
+    .dist-bar.grade-B { background: linear-gradient(180deg, #4ba3c7, #2e7a9b); }
+    .dist-bar.grade-C { background: linear-gradient(180deg, #e0b84c, #b08a1a); }
+    .dist-bar.grade-D { background: linear-gradient(180deg, #e88c8c, #b85a5a); }
+    .dist-bar.grade-F { background: linear-gradient(180deg, #a0a8b3, #6b7280); }
+    .dist-count { font-size: 0.85rem; font-weight: 700; color: #1e3a5f; margin-top: 6px; }
+    .dist-label { font-size: 0.8rem; font-weight: 600; color: #4a5b7a; margin-top: 4px; }
+
+    .array-demo {
+      background: #0f1e33;
+      border-radius: 18px;
+      padding: 1.2rem 1.6rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: #a8c4e0;
+      margin-top: 1.5rem;
+      border-left: 6px solid #3b6ea5;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+    .array-demo .label { color: #5a8cc4; font-weight: 700; }
+    .array-demo .value { color: #e8f0fb; }
+
+    /* student detail panel */
+    .detail-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    .detail-info h3 {
+      margin: 0 0 1rem 0;
+      color: #0b2b4d;
+      font-size: 1.5rem;
+    }
+    .detail-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .detail-meta-item {
+      background: #f8fafd;
+      border-radius: 14px;
+      padding: 0.8rem 1rem;
+      border: 1px solid #d0dfee;
+      text-align: center;
+    }
+    .detail-meta-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #4a5b7a;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .detail-meta-value { font-size: 1.5rem; font-weight: 700; color: #0b2b4d; }
+
+    .radar-chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 350px;
+      margin: 0 auto;
+      aspect-ratio: 1;
+    }
+    .radar-chart {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 4px 10px rgba(30, 58, 95, 0.1));
+    }
+    .subject-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+    .subject-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .subject-bar-label {
+      font-weight: 600;
+      color: #1e3a5f;
+      min-width: 80px;
+      font-size: 0.9rem;
+    }
+    .subject-bar-track {
+      flex: 1;
+      height: 22px;
+      background: #e9eff7;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .subject-bar-fill {
+      height: 100%;
+      border-radius: 12px;
+      transition: width 0.5s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .subject-bar-fill.above-avg { background: linear-gradient(90deg, #4caf7d, #2e7d54); }
+    .subject-bar-fill.below-avg { background: linear-gradient(90deg, #e88c8c, #b85a5a); }
+    .subject-bar-fill.at-avg { background: linear-gradient(90deg, #4ba3c7, #2e7a9b); }
+
+    /* modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 30, 51, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .modal-backdrop.show { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: white;
+      border-radius: 24px;
+      padding: 1.8rem 2rem;
+      max-width: 560px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.25);
+      transform: translateY(20px);
+      transition: transform 0.2s;
+    }
+    .modal-backdrop.show .modal { transform: translateY(0); }
+    .modal h3 {
+      margin-top: 0;
+      color: #1e3a5f;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal p { color: #4a5b7a; font-size: 0.95rem; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .add-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 1rem;
+    }
+    .add-form label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #4a5b7a;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 4px;
+      display: block;
+    }
+    .add-form input {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid #d0dfee;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: #1e3a5f;
+    }
+    .add-form input:focus {
+      outline: none;
+      border-color: #3b6ea5;
+      box-shadow: 0 0 0 3px rgba(59, 110, 165, 0.15);
+    }
+    .add-form .full-width { grid-column: 1 / -1; }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #6a7b99;
+      margin-top: 1rem;
+      border-top: 1px solid #d0dfee;
+      padding-top: 1.5rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e3a5f;
+      color: white;
+      padding: 0.85rem 1.8rem;
+      border-radius: 50px;
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      z-index: 999;
+      font-size: 0.9rem;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: #6a7b99;
+      font-style: italic;
+    }
+
+    /* compare table */
+    .compare-bar {
+      display: inline-block;
+      height: 8px;
+      border-radius: 4px;
+      background: #3b6ea5;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 800px) {
+      .detail-panel { grid-template-columns: 1fr; }
+      .add-form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1>
+        📊 Exam Result Management
+        <span class="badge">MULTI-CLASS</span>
+      </h1>
+      <div class="subhead">multiple class groups · student detail view · live NumPy analytics</div>
+    </div>
+    <div class="action-buttons">
+      <button class="btn btn-success" id="addStudentBtn">
+        <span>➕</span> Add Student
+      </button>
+      <button class="btn" id="exportBtn">
+        <span>📥</span> Export All CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Class tabs -->
+  <div class="class-tabs" id="classTabs">
+    <!-- dynamic tabs -->
+    <button class="add-class-btn" id="addClassBtn">
+      <span>＋</span> New Class
+    </button>
+  </div>
+
+  <!-- Main result table -->
+  <div class="card">
+    <h2>
+      <i>📋</i> <span id="currentClassName">Class</span> gradebook
+      <span class="hint">Edit scores, names — live recalculation</span>
+    </h2>
+    <div class="table-wrapper">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th style="text-align:left; padding-left:1rem;">Student</th>
+            <th>Math</th>
+            <th>Physics</th>
+            <th>Chemistry</th>
+            <th>Biology</th>
+            <th>Average</th>
+            <th>Percentile</th>
+            <th>Grade</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Stats card -->
+  <div class="card">
+    <h2><i>📈</i> Class statistics (live NumPy)</h2>
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <h2 style="margin-top:1.5rem; font-size:1.05rem;"><i>📚</i> Subject means</h2>
+    <div class="subject-means" id="subjectMeansContainer"></div>
+
+    <h2 style="margin-top:1.5rem; font-size:1.05rem;"><i>📊</i> Grade distribution</h2>
+    <div class="distribution" id="distributionChart"></div>
+
+    <div class="array-demo" id="arrayDemo"></div>
+  </div>
+
+  <!-- Student detail card (shown when a student is selected) -->
+  <div class="card" id="detailCard" style="display:none;">
+    <h2>
+      <i>👤</i> Student profile
+      <button class="btn btn-small" id="closeDetailBtn" style="margin-left:auto;">
+        <span>✕</span> Close
+      </button>
+    </h2>
+    <div class="detail-panel" id="detailPanel"></div>
+  </div>
+
+  <div class="footer-note">
+    ⚡ Multi-class gradebook · Click any student row to see their detail profile
+  </div>
+</div>
+
+<!-- Add student modal -->
+<div class="modal-backdrop" id="addModal">
+  <div class="modal">
+    <h3><span>➕</span> Add New Student</h3>
+    <p>Add a student to the current class (<strong id="addModalClassName">—</strong>).</p>
+    <div class="add-form">
+      <div class="full-width">
+        <label for="newName">Full Name</label>
+        <input type="text" id="newName" placeholder="e.g. Jane Doe" maxlength="40">
+      </div>
+      <div>
+        <label for="newMath">Math</label>
+        <input type="number" id="newMath" min="0" max="100" value="75">
+      </div>
+      <div>
+        <label for="newPhysics">Physics</label>
+        <input type="number" id="newPhysics" min="0" max="100" value="75">
+      </div>
+      <div>
+        <label for="newChemistry">Chemistry</label>
+        <input type="number" id="newChemistry" min="0" max="100" value="75">
+      </div>
+      <div>
+        <label for="newBiology">Biology</label>
+        <input type="number" id="newBiology" min="0" max="100" value="75">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelAddBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmAddBtn">Add Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add class modal -->
+<div class="modal-backdrop" id="addClassModal">
+  <div class="modal">
+    <h3><span>＋</span> Create New Class</h3>
+    <p>Enter a name for the new class group. You can add students afterward.</p>
+    <div class="add-form">
+      <div class="full-width">
+        <label for="newClassName">Class Name</label>
+        <input type="text" id="newClassName" placeholder="e.g. Grade 12-A" maxlength="30">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="cancelAddClassBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmAddClassBtn">Create Class</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal-backdrop" id="deleteModal">
+  <div class="modal">
+    <h3><span>🗑️</span> Remove Student</h3>
+    <p id="deleteMessage">Are you sure?</p>
+    <div class="modal-actions">
+      <button class="btn" id="cancelDeleteBtn">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete class modal -->
+<div class="modal-backdrop" id="deleteClassModal">
+  <div class="modal">
+    <h3><span>🗑️</span> Delete Class</h3>
+    <p id="deleteClassMessage">Delete this class and all its students?</p>
+    <div class="modal-actions">
+      <button class="btn" id="cancelDeleteClassBtn">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteClassBtn">Delete Class</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Done</div>
+
+<script>
+  (function() {
+    // ========== 1. INITIAL DATA (multi-class) ==========
+    const INITIAL_CLASSES = [
+      {
+        id: 'c1',
+        name: 'Grade 12-A',
+        students: [
+          { id: 's1', name: "Alice Chen",    scores: [92, 88, 95, 90] },
+          { id: 's2', name: "Bob Martinez",  scores: [78, 85, 70, 82] },
+          { id: 's3', name: "Carla Ruiz",    scores: [88, 92, 85, 91] },
+          { id: 's4', name: "David Kim",     scores: [65, 70, 62, 68] },
+          { id: 's5', name: "Eva Novak",     scores: [95, 98, 94, 97] }
+        ]
+      },
+      {
+        id: 'c2',
+        name: 'Grade 12-B',
+        students: [
+          { id: 's6',  name: "Frank Osei",    scores: [82, 79, 88, 84] },
+          { id: 's7',  name: "Grace Liu",     scores: [70, 75, 68, 72] },
+          { id: 's8',  name: "Henry Ford",    scores: [55, 60, 52, 58] },
+          { id: 's9',  name: "Ivy Chen",      scores: [98, 96, 99, 97] },
+          { id: 's10', name: "Jamal Adams",   scores: [84, 80, 86, 82] }
+        ]
+      }
+    ];
+
+    // ========== 2. STATE ==========
+    let classes = JSON.parse(JSON.stringify(INITIAL_CLASSES));
+    let activeClassId = classes[0].id;
+    let selectedStudentId = null;
+    let nextStudentId = 100;
+    let nextClassId = 10;
+    let pendingDeleteId = null;
+    let pendingDeleteName = '';
+    let pendingDeleteClassId = null;
+
+    // ========== 3. HELPERS ==========
+    function clampScore(v) {
+      const n = Number(v);
+      if (isNaN(n)) return 0;
+      return Math.min(100, Math.max(0, n));
+    }
+    function getGrade(avg) {
+      if (avg >= 90) return 'A';
+      if (avg >= 80) return 'B';
+      if (avg >= 70) return 'C';
+      if (avg >= 60) return 'D';
+      return 'F';
+    }
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+    }
+    function getActiveClass() {
+      return classes.find(c => c.id === activeClassId) || classes[0];
+    }
+
+    // ========== 4. NumPy ENGINE (per class) ==========
+    function computeClassResults(classObj) {
+      const list = classObj.students;
+      if (list.length === 0) {
+        return {
+          enriched: [], classStats: null, subjectMeans: null,
+          avgArray: null, scoreMatrix: null,
+          gradeCounts: { A:0, B:0, C:0, D:0, F:0 }
+        };
+      }
+
+      const rawScores = list.map(s => s.scores);
+      const scoreMatrix = nj.array(rawScores);
+      const avgArray = nj.mean(scoreMatrix, 1);
+      const averages = avgArray.tolist();
+      const grades = averages.map(getGrade);
+
+      const sortedUnique = [...new Set(averages)].sort((a, b) => b - a);
+      const rankMap = new Map();
+      sortedUnique.forEach((v, i) => rankMap.set(v, i + 1));
+      const ranks = averages.map(a => rankMap.get(a));
+
+      const total = averages.length;
+      const percentiles = averages.map(avg => {
+        const below = averages.filter(a => a <= avg).length;
+        return (below / total) * 100;
+      });
+
+      const enriched = list.map((s, i) => ({
+        id: s.id, name: s.name, scores: s.scores,
+        math: s.scores[0], physics: s.scores[1],
+        chemistry: s.scores[2], biology: s.scores[3],
+        average: averages[i], grade: grades[i],
+        rank: ranks[i], percentile: percentiles[i]
+      }));
+
+      const classAvg = nj.mean(avgArray).tolist();
+      const classStd = nj.std(avgArray).tolist();
+      const maxAvg = nj.max(avgArray).tolist();
+      const minAvg = nj.min(avgArray).tolist();
+      const medianAvg = nj.median(avgArray).tolist();
+      const topIdx = averages.indexOf(maxAvg);
+      const lowIdx = averages.indexOf(minAvg);
+
+      const subjectMeans = {
+        math: nj.mean(scoreMatrix.slice(null, 0)).tolist(),
+        physics: nj.mean(scoreMatrix.slice(null, 1)).tolist(),
+        chemistry: nj.mean(scoreMatrix.slice(null, 2)).tolist(),
+        biology: nj.mean(scoreMatrix.slice(null, 3)).tolist()
+      };
+
+      const gradeCounts = { A:0, B:0, C:0, D:0, F:0 };
+      grades.forEach(g => { gradeCounts[g] = (gradeCounts[g] || 0) + 1; });
+
+      return {
+        enriched,
+        classStats: {
+          classAvg, classStd, maxAvg, minAvg, medianAvg,
+          topStudent: list[topIdx]?.name || '—',
+          lowStudent: list[lowIdx]?.name || '—'
+        },
+        subjectMeans, avgArray, scoreMatrix, gradeCounts
+      };
+    }
+
+    // ========== 5. RENDER CLASS TABS ==========
+    function renderClassTabs() {
+      const container = document.getElementById('classTabs');
+      const addBtn = document.getElementById('addClassBtn');
+      // Remove existing tabs (but keep add button)
+      container.querySelectorAll('.class-tab').forEach(el => el.remove());
+
+      classes.forEach(c => {
+        const tab = document.createElement('button');
+        tab.className = 'class-tab' + (c.id === activeClassId ? ' active' : '');
+        tab.dataset.id = c.id;
+        tab.innerHTML = `
+          <span>${escapeHtml(c.name)}</span>
+          <span class="count">${c.students.length}</span>
+          ${classes.length > 1 ? `<span class="close-tab" data-id="${c.id}" title="Delete class">×</span>` : ''}
+        `;
+        tab.addEventListener('click', (e) => {
+          if (e.target.classList.contains('close-tab')) return;
+          activeClassId = c.id;
+          selectedStudentId = null;
+          refreshAll();
+        });
+        container.insertBefore(tab, addBtn);
+      });
+
+      // Attach delete-class handlers
+      container.querySelectorAll('.close-tab').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = el.dataset.id;
+          const cls = classes.find(c => c.id === id);
+          if (cls) {
+            pendingDeleteClassId = id;
+            document.getElementById('deleteClassMessage').textContent =
+              `Delete "${escapeHtml(cls.name)}" and all ${cls.students.length} students? This cannot be undone.`;
+            document.getElementById('deleteClassModal').classList.add('show');
+          }
+        });
+      });
+    }
+
+    // ========== 6. RENDER TABLE ==========
+    function renderTable(result) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      if (result.enriched.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No students in this class. Click "Add Student" to begin.</td></tr>`;
+        return;
+      }
+
+      const sorted = [...result.enriched].sort((a, b) => a.rank - b.rank);
+
+      sorted.forEach(item => {
+        const row = document.createElement('tr');
+        row.dataset.id = item.id;
+        if (item.id === selectedStudentId) row.style.outline = '2px solid #3b6ea5';
+
+        let rankClass = '';
+        if (item.rank === 1) rankClass = 'top1';
+        else if (item.rank === 2) rankClass = 'top2';
+        else if (item.rank === 3) rankClass = 'top3';
+
+        row.innerHTML = `
+          <td><span class="rank-badge ${rankClass}">#${item.rank}</span></td>
+          <td style="text-align:left; padding-left:0.8rem;">
+            <input type="text" class="name-input" data-id="${item.id}" value="${escapeHtml(item.name)}" maxlength="40">
+          </td>
+          <td><input type="number" class="score-input" data-id="${item.id}" data-subject="0" min="0" max="100" value="${item.math}"></td>
+          <td><input type="number" class="score-input" data-id="${item.id}" data-subject="1" min="0" max="100" value="${item.physics}"></td>
+          <td><input type="number" class="score-input" data-id="${item.id}" data-subject="2" min="0" max="100" value="${item.chemistry}"></td>
+          <td><input type="number" class="score-input" data-id="${item.id}" data-subject="3" min="0" max="100" value="${item.biology}"></td>
+          <td style="font-weight:700; color:#0b2b4d;">${item.average.toFixed(1)}</td>
+          <td style="color:#4a5b7a;">${item.percentile.toFixed(1)}%</td>
+          <td><span class="grade-badge grade-${item.grade}">${item.grade}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="icon-btn view" data-id="${item.id}" title="View profile">👁️</button>
+              <button class="icon-btn delete" data-id="${item.id}" title="Remove">🗑️</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // ========== 7. RENDER STATS ==========
+    function renderStats(result) {
+      const statsGrid = document.getElementById('statsGrid');
+      const subjectContainer = document.getElementById('subjectMeansContainer');
+      const distContainer = document.getElementById('distributionChart');
+      const arrayDemo = document.getElementById('arrayDemo');
+
+      if (!result.classStats) {
+        statsGrid.innerHTML = `<div class="stat-item" style="grid-column:1/-1;text-align:center;padding:2rem;color:#6a7b99;">Add students to see statistics.</div>`;
+        subjectContainer.innerHTML = '';
+        distContainer.innerHTML = '';
+        arrayDemo.innerHTML = `<span class="label">// No data</span>`;
+        return;
+      }
+
+      const s = result.classStats;
+      statsGrid.innerHTML = `
+        <div class="stat-item"><div class="stat-label">Class average</div><div class="stat-value">${s.classAvg.toFixed(2)}</div><div class="stat-sub">std dev: ${s.classStd.toFixed(2)}</div></div>
+        <div class="stat-item"><div class="stat-label">Median</div><div class="stat-value">${s.medianAvg.toFixed(1)}</div><div class="stat-sub">middle value</div></div>
+        <div class="stat-item"><div class="stat-label">Highest</div><div class="stat-value">${s.maxAvg.toFixed(1)}</div><div class="stat-sub">${escapeHtml(s.topStudent)}</div></div>
+        <div class="stat-item"><div class="stat-label">Lowest</div><div class="stat-value">${s.minAvg.toFixed(1)}</div><div class="stat-sub">${escapeHtml(s.lowStudent)}</div></div>
+        <div class="stat-item"><div class="stat-label">Students</div><div class="stat-value">${result.enriched.length}</div><div class="stat-sub">in this class</div></div>
+      `;
+
+      const subjects = [
+        { label: 'Math', value: result.subjectMeans.math },
+        { label: 'Physics', value: result.subjectMeans.physics },
+        { label: 'Chemistry', value: result.subjectMeans.chemistry },
+        { label: 'Biology', value: result.subjectMeans.biology }
+      ];
+      subjectContainer.innerHTML = subjects.map(s => `
+        <div class="subject-mean-item">
+          <span class="subject-mean-label">${s.label}</span>
+          <div class="subject-mean-bar"><div class="subject-mean-fill" style="width: ${Math.min(100, s.value)}%;"></div></div>
+          <span class="subject-mean-value">${s.value.toFixed(1)}</span>
+        </div>
+      `).join('');
+
+      const gradeOrder = ['A', 'B', 'C', 'D', 'F'];
+      const maxCount = Math.max(1, ...gradeOrder.map(g => result.gradeCounts[g] || 0));
+      distContainer.innerHTML = gradeOrder.map(g => {
+        const count = result.gradeCounts[g] || 0;
+        const pct = (count / maxCount) * 100;
+        return `
+          <div class="dist-bar-wrapper">
+            <div class="dist-bar grade-${g}" style="height: ${Math.max(4, pct)}%;"></div>
+            <div class="dist-count">${count}</div>
+            <div class="dist-label">${g}</div>
+          </div>
+        `;
+      }).join('');
+
+      const avgList = result.avgArray.tolist().map(v => v.toFixed(2));
+      const scoreStr = result.scoreMatrix.toString().replace(/\n/g, ' ').substring(0, 110) + ' ...';
+      arrayDemo.innerHTML = `
+        <div><span class="label">// score matrix (shape ${result.scoreMatrix.shape.join('×')})</span></div>
+        <div><span class="value">${scoreStr}</span></div>
+        <div style="margin-top:8px;"><span class="label">// averages (shape ${result.avgArray.shape.join('×')})</span></div>
+        <div><span class="value">[${avgList.join(', ')}]</span></div>
+        <div style="margin-top:8px;"><span class="label">// np.mean(avg)</span> → <span class="value">${s.classAvg.toFixed(4)}</span></div>
+        <div><span class="label">// np.std(avg) </span> → <span class="value">${s.classStd.toFixed(4)}</span></div>
+        <div><span class="label">// np.median(avg)</span> → <span class="value">${s.medianAvg.toFixed(4)}</span></div>
+      `;
+    }
+
+    // ========== 8. RENDER STUDENT DETAIL ==========
+    function renderStudentDetail() {
+      const card = document.getElementById('detailCard');
+      const panel = document.getElementById('detailPanel');
+
+      if (!selectedStudentId) {
+        card.style.display = 'none';
+        return;
+      }
+
+      const cls = getActiveClass();
+      const student = cls.students.find(s => s.id === selectedStudentId);
+      if (!student) {
+        card.style.display = 'none';
+        selectedStudentId = null;
+        return;
+      }
+
+      const result = computeClassResults(cls);
+      const enriched = result.enriched.find(e => e.id === selectedStudentId);
+      if (!enriched) { card.style.display = 'none'; return; }
+
+      card.style.display = 'block';
+
+      const subjects = ['Math', 'Physics', 'Chemistry', 'Biology'];
+      const subjectScores = student.scores;
+      const subjectMeans = [
+        result.subjectMeans.math, result.subjectMeans.physics,
+        result.subjectMeans.chemistry, result.subjectMeans.biology
+      ];
+
+      // Radar chart SVG
+      const radarSize = 300;
+      const cx = radarSize / 2;
+      const cy = radarSize / 2;
+      const radius = 110;
+      const numAxes = 4;
+      const angleStep = (Math.PI * 2) / numAxes;
+      const startAngle = -Math.PI / 2;
+
+      // Grid circles
+      let gridCircles = '';
+      for (let r = 25; r <= 100; r += 25) {
+        const rr = (r / 100) * radius;
+        gridCircles += `<circle cx="${cx}" cy="${cy}" r="${rr}" fill="none" stroke="#d0dfee" stroke-width="1"/>`;
+      }
+
+      // Axes lines
+      let axesLines = '';
+      let axisLabels = '';
+      const labelPositions = [
+        { x: cx, y: cy - radius - 18 },                         // top (Math)
+        { x: cx + radius + 20, y: cy + 5 },                     // right (Physics)
+        { x: cx, y: cy + radius + 24 },                         // bottom (Chemistry)
+        { x: cx - radius - 20, y: cy + 5 }                      // left (Biology)
+      ];
+      subjects.forEach((subj, i) => {
+        const angle = startAngle + i * angleStep;
+        const x2 = cx + Math.cos(angle) * radius;
+        const y2 = cy + Math.sin(angle) * radius;
+        axesLines += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#d0dfee" stroke-width="1"/>`;
+        const lp = labelPositions[i];
+        axisLabels += `<text x="${lp.x}" y="${lp.y}" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a5f">${subj}</text>`;
+      });
+
+      // Student polygon
+      const points = subjectScores.map((score, i) => {
+        const angle = startAngle + i * angleStep;
+        const r = (score / 100) * radius;
+        return `${cx + Math.cos(angle) * r},${cy + Math.sin(angle) * r}`;
+      }).join(' ');
+
+      // Class average polygon
+      const avgPoints = subjectMeans.map((mean, i) => {
+        const angle = startAngle + i * angleStep;
+        const r = (mean / 100) * radius;
+        return `${cx + Math.cos(angle) * r},${cy + Math.sin(angle) * r}`;
+      }).join(' ');
+
+      // Data point dots
+      let dots = '';
+      subjectScores.forEach((score, i) => {
+        const angle = startAngle + i * angleStep;
+        const r = (score / 100) * radius;
+        const x = cx + Math.cos(angle) * r;
+        const y = cy + Math.sin(angle) * r;
+        dots += `<circle cx="${x}" cy="${y}" r="4" fill="#1e3a5f" stroke="white" stroke-width="2"/>`;
+      });
+
+      const radarSvg = `
+        <svg viewBox="0 0 ${radarSize} ${radarSize}" class="radar-chart">
+          ${gridCircles}
+          ${axesLines}
+          <polygon points="${avgPoints}" fill="#4ba3c7" fill-opacity="0.12" stroke="#4ba3c7" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <polygon points="${points}" fill="#1e3a5f" fill-opacity="0.2" stroke="#1e3a5f" stroke-width="2"/>
+          ${dots}
+          ${axisLabels}
+          <text x="${cx}" y="${radarSize - 6}" text-anchor="middle" font-size="10" fill="#6a7b99">solid = student · dashed = class mean</text>
+        </svg>
+      `;
+
+      // Subject bars (student vs class avg)
+      const subjectBarsHtml = subjects.map((subj, i) => {
+        const score = subjectScores[i];
+        const mean = subjectMeans[i];
+        const diff = score - mean;
+        let fillClass = 'at-avg';
+        if (diff > 3) fillClass = 'above-avg';
+        else if (diff < -3) fillClass = 'below-avg';
+        return `
+          <div class="subject-bar-row">
+            <span class="subject-bar-label">${subj}</span>
+            <div class="subject-bar-track">
+              <div class="subject-bar-fill ${fillClass}" style="width:${score}%;">${score}</div>
+            </div>
+            <span style="font-size:0.8rem; color:#6a7b99; min-width:55px; text-align:right;">
+              ${diff >= 0 ? '+' : ''}${diff.toFixed(1)} vs avg
+            </span>
+          </div>
+        `;
+      }).join('');
+
+      // Rank position bar
+      const totalStudents = result.enriched.length;
+
+      panel.innerHTML = `
+        <div class="detail-info">
+          <h3>${escapeHtml(student.name)}</h3>
+          <div class="detail-meta">
+            <div class="detail-meta-item">
+              <div class="detail-meta-label">Rank</div>
+              <div class="detail-meta-value">#${enriched.rank}<span style="font-size:0.8rem; color:#6a7b99;">/${totalStudents}</span></div>
+            </div>
+            <div class="detail-meta-item">
+              <div class="detail-meta-label">Average</div>
+              <div class="detail-meta-value">${enriched.average.toFixed(1)}</div>
+            </div>
+            <div class="detail-meta-item">
+              <div class="detail-meta-label">Grade</div>
+              <div class="detail-meta-value"><span class="grade-badge grade-${enriched.grade}" style="font-size:1rem;">${enriched.grade}</span></div>
+            </div>
+            <div class="detail-meta-item">
+              <div class="detail-meta-label">Percentile</div>
+              <div class="detail-meta-value">${enriched.percentile.toFixed(1)}%</div>
+            </div>
+          </div>
+          <h3 style="font-size:1rem; color:#4a5b7a; margin-bottom:0.8rem;">Subject breakdown</h3>
+          <div class="subject-bars">${subjectBarsHtml}</div>
+        </div>
+        <div class="radar-chart-container">
+          ${radarSvg}
+        </div>
+      `;
+    }
+
+    // ========== 9. MAIN REFRESH ==========
+    function refreshAll() {
+      const cls = getActiveClass();
+      document.getElementById('currentClassName').textContent = cls.name;
+      renderClassTabs();
+      const result = computeClassResults(cls);
+      renderTable(result);
+      renderStats(result);
+      renderStudentDetail();
+    }
+
+    // ========== 10. TABLE LISTENERS ==========
+    function setupTableListeners() {
+      const tbody = document.getElementById('tableBody');
+
+      // Score edits
+      tbody.addEventListener('input', (e) => {
+        const input = e.target;
+        if (input.classList.contains('score-input')) {
+          const id = input.dataset.id;
+          const subjIdx = Number(input.dataset.subject);
+          const val = input.value.trim();
+          if (val === '' || isNaN(Number(val)) || Number(val) < 0 || Number(val) > 100) {
+            input.classList.add('invalid');
+            return;
+          }
+          input.classList.remove('invalid');
+          const student = getActiveClass().students.find(s => s.id === id);
+          if (student) {
+            student.scores[subjIdx] = clampScore(val);
+            const active = document.activeElement;
+            const activeId = active?.dataset?.id;
+            const activeSubj = active?.dataset?.subject;
+            const selStart = active?.selectionStart;
+            const selEnd = active?.selectionEnd;
+            refreshAll();
+            if (activeId !== undefined) {
+              const newInput = tbody.querySelector(`.score-input[data-id="${activeId}"][data-subject="${activeSubj}"]`);
+              if (newInput) {
+                newInput.focus();
+                try { newInput.setSelectionRange(selStart, selEnd); } catch(_) {}
+              }
+            }
+          }
+        }
+      });
+
+      // Name edits
+      tbody.addEventListener('input', (e) => {
+        const input = e.target;
+        if (input.classList.contains('name-input')) {
+          const id = input.dataset.id;
+          const student = getActiveClass().students.find(s => s.id === id);
+          if (student) {
+            student.name = input.value.trim() || 'Unnamed';
+            const selStart = input.selectionStart;
+            const selEnd = input.selectionEnd;
+            refreshAll();
+            const newInput = tbody.querySelector(`.name-input[data-id="${id}"]`);
+            if (newInput) {
+              newInput.focus();
+              try { newInput.setSelectionRange(selStart, selEnd); } catch(_) {}
+            }
+          }
+        }
+      });
+
+      // Buttons: view / delete
+      tbody.addEventListener('click', (e) => {
+        const viewBtn = e.target.closest('.icon-btn.view');
+        const delBtn = e.target.closest('.icon-btn.delete');
+
+        if (viewBtn) {
+          const id = viewBtn.dataset.id;
+          selectedStudentId = (selectedStudentId === id) ? null : id;
+          renderTable(computeClassResults(getActiveClass()));
+          renderStudentDetail();
+          if (selectedStudentId) {
+            document.getElementById('detailCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }
+
+        if (delBtn) {
+          const id = delBtn.dataset.id;
+          const student = getActiveClass().students.find(s => s.id === id);
+          if (student) {
+            pendingDeleteId = id;
+            pendingDeleteName = student.name;
+            document.getElementById('deleteMessage').textContent =
+              `Are you sure you want to remove "${escapeHtml(student.name)}"? This cannot be undone.`;
+            document.getElementById('deleteModal').classList.add('show');
+          }
+        }
+      });
+    }
+
+    // ========== 11. MODAL LISTENERS ==========
+    function setupModalListeners() {
+      // --- Add Student ---
+      const addModal = document.getElementById('addModal');
+      document.getElementById('addStudentBtn').addEventListener('click', () => {
+        const cls = getActiveClass();
+        document.getElementById('addModalClassName').textContent = cls.name;
+        document.getElementById('newName').value = '';
+        document.getElementById('newMath').value = 75;
+        document.getElementById('newPhysics').value = 75;
+        document.getElementById('newChemistry').value = 75;
+        document.getElementById('newBiology').value = 75;
+        addModal.classList.add('show');
+        setTimeout(() => document.getElementById('newName').focus(), 100);
+      });
+      document.getElementById('cancelAddBtn').addEventListener('click', () => addModal.classList.remove('show'));
+      addModal.addEventListener('click', (e) => { if (e.target === addModal) addModal.classList.remove('show'); });
+      document.getElementById('confirmAddBtn').addEventListener('click', () => {
+        const name = document.getElementById('newName').value.trim() || 'Unnamed Student';
+        const scores = [
+          clampScore(document.getElementById('newMath').value),
+          clampScore(document.getElementById('newPhysics').value),
+          clampScore(document.getElementById('newChemistry').value),
+          clampScore(document.getElementById('newBiology').value)
+        ];
+        getActiveClass().students.push({ id: 's' + (nextStudentId++), name, scores });
+        addModal.classList.remove('show');
+        refreshAll();
+        showToast(`✅ Added ${escapeHtml(name)}`);
+      });
+
+      // --- Add Class ---
+      const addClassModal = document.getElementById('addClassModal');
+      document.getElementById('addClassBtn').addEventListener('click', () => {
+        document.getElementById('newClassName').value = '';
+        addClassModal.classList.add('show');
+        setTimeout(() => document.getElementById('newClassName').focus(), 100);
+      });
+      document.getElementById('cancelAddClassBtn').addEventListener('click', () => addClassModal.classList.remove('show'));
+      addClassModal.addEventListener('click', (e) => { if (e.target === addClassModal) addClassModal.classList.remove('show'); });
+      document.getElementById('confirmAddClassBtn').addEventListener('click', () => {
+        const name = document.getElementById('newClassName').value.trim() || `Class ${classes.length + 1}`;
+        const newClass = { id: 'c' + (nextClassId++), name, students: [] };
+        classes.push(newClass);
+        activeClassId = newClass.id;
+        selectedStudentId = null;
+        addClassModal.classList.remove('show');
+        refreshAll();
+        showToast(`✅ Created ${escapeHtml(name)}`);
+      });
+
+      // --- Delete Student ---
+      const delModal = document.getElementById('deleteModal');
+      document.getElementById('cancelDeleteBtn').addEventListener('click', () => { delModal.classList.remove('show'); pendingDeleteId = null; });
+      delModal.addEventListener('click', (e) => { if (e.target === delModal) { delModal.classList.remove('show'); pendingDeleteId = null; } });
+      document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+        if (pendingDeleteId) {
+          const cls = getActiveClass();
+          cls.students = cls.students.filter(s => s.id !== pendingDeleteId);
+          if (selectedStudentId === pendingDeleteId) selectedStudentId = null;
+          const name = pendingDeleteName;
+          pendingDeleteId = null;
+          delModal.classList.remove('show');
+          refreshAll();
+          showToast(`🗑️ Removed ${escapeHtml(name)}`);
+        }
+      });
+
+      // --- Delete Class ---
+      const delClassModal = document.getElementById('deleteClassModal');
+      document.getElementById('cancelDeleteClassBtn').addEventListener('click', () => { delClassModal.classList.remove('show'); pendingDeleteClassId = null; });
+      delClassModal.addEventListener('click', (e) => { if (e.target === delClassModal) { delClassModal.classList.remove('show'); pendingDeleteClassId = null; } });
+      document.getElementById('confirmDeleteClassBtn').addEventListener('click', () => {
+        if (pendingDeleteClassId && classes.length > 1) {
+          const cls = classes.find(c => c.id === pendingDeleteClassId);
+          const name = cls?.name || '';
+          classes = classes.filter(c => c.id !== pendingDeleteClassId);
+          if (activeClassId === pendingDeleteClassId) {
+            activeClassId = classes[0].id;
+            selectedStudentId = null;
+          }
+          pendingDeleteClassId = null;
+          delClassModal.classList.remove('show');
+          refreshAll();
+          showToast(`🗑️ Deleted class "${escapeHtml(name)}"`);
+        }
+      });
+
+      // Escape key closes all modals
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('show'));
+        }
+      });
+
+      // Close detail
+      document.getElementById('closeDetailBtn').addEventListener('click', () => {
+        selectedStudentId = null;
+        renderTable(computeClassResults(getActiveClass()));
+        renderStudentDetail();
+      });
+    }
+
+    // ========== 12. EXPORT ALL CSV ==========
+    function setupExport() {
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        const rows = [
+          ['Class', 'Rank', 'Student', 'Math', 'Physics', 'Chemistry', 'Biology', 'Average', 'Percentile', 'Grade']
+        ];
+        let hasData = false;
+        classes.forEach(cls => {
+          const result = computeClassResults(cls);
+          if (result.enriched.length === 0) return;
+          hasData = true;
+          const sorted = [...result.enriched].sort((a, b) => a.rank - b.rank);
+          sorted.forEach(item => {
+            rows.push([
+              cls.name, item.rank, item.name,
+              item.math, item.physics, item.chemistry, item.biology,
+              item.average.toFixed(2), item.percentile.toFixed(2), item.grade
+            ]);
+          });
+          rows.push([]); // blank separator between classes
+        });
+        if (!hasData) { showToast('⚠️ No data to export'); return; }
+        const csv = rows.map(r => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'all_classes_results.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('📥 Exported all classes');
+      });
+    }
+
+    // ========== 13. INIT ==========
+    window.addEventListener('load', () => {
+      if (typeof nj === 'undefined') {
+        alert('NumJs library failed to load.');
+        return;
+      }
+      refreshAll();
+      setupTableListeners();
+      setupModalListeners();
+      setupExport();
+    });
+  })();
+</script>
+</body>
+</html>
